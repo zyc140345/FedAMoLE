@@ -1,27 +1,16 @@
 # Personalized Federated Fine-Tuning for LLMs via Data-Driven Heterogeneous Model Architectures
 This repository contains the official implementation for the work 
-“Personalized Federated Fine-Tuning for LLMs via Data-Driven Heterogeneous Model Architectures”. 
-See more details in our [paper](https://arxiv.org/abs/2411.19128).
-> A large amount of instructional text data is essential to enhance the performance of 
-> pre-trained large language models (LLMs) for downstream tasks. This data can contain 
-> sensitive information and therefore cannot be shared in practice, resulting in data 
-> silos that limit the effectiveness of LLMs on various tasks. Federated learning (FL) 
-> enables collaborative fine-tuning across different clients without sharing their data. 
-> Nonetheless, in practice, this instructional text data is highly heterogeneous in both 
-> quantity and distribution across clients, necessitating distinct model structures to 
-> best accommodate the variations. However, existing federated fine-tuning approaches 
-> either enforce the same model structure or rely on predefined ad-hoc architectures 
-> unaware of data distribution, resulting in suboptimal performance. To address this 
-> challenge, we propose FedAMoLE, a lightweight personalized federated fine-tuning framework 
-> that leverages data-driven heterogeneous model architectures. FedAMoLE introduces the 
-> Adaptive Mixture of LoRA Experts (AMoLE) module, which facilitates model heterogeneity 
-> with minimal communication overhead by allocating varying numbers of LoRA-based domain 
-> experts to each client. Furthermore, we develop a reverse selection-based expert 
-> assignment (RSEA) strategy, which enables data-driven model architecture adjustment 
-> during fine-tuning by allowing domain experts to select clients that best align with 
-> their knowledge domains. Extensive experiments across six different scenarios of data 
-> heterogeneity demonstrate that FedAMoLE significantly outperforms existing methods for 
-> federated LLM fine-tuning, achieving superior accuracy while maintaining good scalability.
+“Personalized Federated Fine-Tuning for LLMs via Data-Driven Heterogeneous Model Architectures”.
+> Large-scale instruction data is essential for aligning pre-trained Large Language Models (LLMs) 
+> with human instructions through instruction tuning. However, such data is often sourced from distinct clients, 
+> characterized by privacy concerns and heterogeneity. Federated Learning (FL) addresses privacy issues by 
+> enabling collaborative fine-tuning without data sharing. However, traditional FL assumes a uniform model structure 
+> and data distribution, making it ineffective for training on highly heterogeneous data with varying amounts and 
+> formats. To address this, we propose FedAMoLE—a lightweight, personalized FL framework enabling data-driven 
+> heterogeneous model architectures based on mixture of LoRA experts (MoLE). It features an adaptive MoLE module 
+> for aggregating heterogeneous models and a reverse selection-based expert assignment strategy to optimize model 
+> architectures based on local and global data distributions. Experiments across five scenarios show that FedAMoLE 
+> improves accuracy by an average of 5.14% over existing approaches while obtaining good scalability.
 
 ## Project Structure
 ```
@@ -108,15 +97,4 @@ python plot.py
 ```
 
 ## License
-This project adopts the MIT License. If the implementations and/or our paper were useful to you, please consider citing this [work](https://arxiv.org/abs/2411.19128):
-```bibtex
-@misc{zhang2024personalized,
-    title = {Personalized Federated Fine-Tuning for LLMs via Data-Driven Heterogeneous Model Architectures},
-    author = {Yicheng Zhang and Zhen Qin and Zhaomin Wu and Shuiguang Deng},
-    year = {2024},
-    eprint = {2411.19128},
-    archivePrefix = {arXiv},
-    primaryClass = {cs.LG},
-    doi = {10.48550/arXiv.2411.19128}
-}
-```
+This project adopts the MIT License. If the implementations and/or our paper were useful to you, please consider citing this work.

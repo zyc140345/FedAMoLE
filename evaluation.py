@@ -32,9 +32,10 @@ ALGO2METRIC_SUFFIX = {
     'fed_prompt': '',
     'fed_ptuning': '',
     'fed_moe': '',
-    'fed_moe_random': '',
-    'fed_moe_vanilla_router': '',
-    'fed_moe_vanilla_router_random': '',
+    'fed_moe_no_rsea': '',
+    'fed_moe_no_amole': '',
+    'fed_moe_no_amole_rsea': '',
+    'fed_moe_no_shared': '',
     'fdlora': '',
     'learned_adaptive_training': '_mutual_ensemble_adaptive',
     'mutual': '_mutual_ensemble'
@@ -100,6 +101,7 @@ def parse_json_log(log_dir):
 
 def summary(root_dir, last=False, return_all=False, include_ft=False):
     datasets = list_dir(root_dir)
+    metrics = {}
     result_all = {dataset: {} for dataset in datasets}
 
     for dataset in datasets:
@@ -154,6 +156,10 @@ def summary(root_dir, last=False, return_all=False, include_ft=False):
                 algorithm: data[:, -1].mean() if last else data.max(axis=1).mean()
                 for algorithm, data in datas.items()
             }
+            for algorithm, data in mean_datas.items():
+                if algorithm not in metrics:
+                    metrics[algorithm] = []
+                metrics[algorithm].append(data)
             std_datas = {
                 algorithm: data[:, -1].std() if last else data.max(axis=1).std()
                 for algorithm, data in datas.items()
@@ -167,7 +173,7 @@ def summary(root_dir, last=False, return_all=False, include_ft=False):
                 best_baseline = max(v for k, v in mean_datas.items() if k != 'fed_moe')
                 ours = mean_datas['fed_moe']
                 gain = (ours - best_baseline) / best_baseline * 100
-                result_str += f", gain={gain:.2f}%"
+                result_str += f", gain={gain:.4f}%"
 
             print(result_str)
 
@@ -197,8 +203,20 @@ def summary(root_dir, last=False, return_all=False, include_ft=False):
             best_baseline = max(v for k, v in mean_datas.items() if k != 'fed_moe')
             ours = mean_datas['fed_moe']
             gain = (ours - best_baseline) / best_baseline * 100
-            result_str += f", gain={gain:.2f}%"
+            result_str += f", gain={gain:.4f}%"
         print(result_str)
+
+    result_str = "Total Average: "
+    result_str += ", ".join([
+        f"{algorithm}={np.mean(data):.2f}%"
+        for algorithm, data in metrics.items()
+    ])
+    if 'fed_moe' in metrics:
+        best_baseline = max(np.mean(v) for k, v in metrics.items() if k != 'fed_moe')
+        ours = np.mean(metrics['fed_moe'])
+        gain = (ours - best_baseline) / best_baseline * 100
+        result_str += f", gain={gain:.4f}%"
+    print(result_str)
 
     if return_all:
         return result_all

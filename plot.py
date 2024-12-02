@@ -29,9 +29,10 @@ ALG_MAP = {
     'fed_ptuning_tune': 'FedPTuning-FT',
     'fdlora': 'FDLoRA',
     'fed_moe': 'FedAMoLE',
-    'fed_moe_vanilla_router_random': 'FedAMoLE (vanilla router, random)',
-    'fed_moe_vanilla_router': 'FedAMoLE (vanilla router)',
-    'fed_moe_random': 'FedAMoLE (random)'
+    'fed_moe_no_amole_rsea': 'FedAMoLE-A-R',
+    'fed_moe_no_amole': 'FedAMoLE-A',
+    'fed_moe_no_rsea': 'FedAMoLE-R',
+    'fed_moe_no_shared': 'FedAMoLE-S',
 }
 
 DATASET_MAP = {
@@ -611,11 +612,6 @@ if __name__ == '__main__':
     # plot_metric_per_client_num(root_dir, save_dir, include_ft=True, last=True, sep_legend=True)
 
     # Fig. 7
-    # root_dir = './logs'
-    # save_dir = './figures'
-    # plot_metric_per_iid(root_dir, save_dir, last=True, sep_legend=True)
-
-    # Fig. 8
     # seed = 42
     # set_seed(seed)
     # save_dir = './figures/logits_scatter'
@@ -623,6 +619,11 @@ if __name__ == '__main__':
     # plot_logits_scatter(root_dir, seed=seed, save_dir=save_dir, layer_step=3, sep_legend=True)
     # root_dir = "./logs/natural-instruct/meta1/fed_moe/42/1732238685"
     # plot_logits_scatter(root_dir, seed=seed, save_dir=save_dir, layer_step=3, sep_legend=True)
+
+    # Fig. 8
+    # root_dir = './logs'
+    # save_dir = './figures'
+    # plot_metric_per_iid(root_dir, save_dir, last=True, sep_legend=True)
 
     # Fig. 9
     # root_dir = './logs'
