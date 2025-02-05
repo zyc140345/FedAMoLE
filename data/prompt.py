@@ -74,6 +74,9 @@ class MSMarcoTemplate(PromptTemplate):
 class BoolQTemplate(PromptTemplate):
     template = "{passage} {question} "
     choices = ["No", "Yes"]
+    soft_prompt = (
+        "Based on the passage, answer 'Yes' if the question is supported, otherwise answer 'No'."
+    )
 
     def get_prompt(self, batch) -> Tuple[List[str], List[str]]:
         sources = []
@@ -115,6 +118,9 @@ class WiCTemplate(PromptTemplate):
         "Yes, No?\n{sentence1}\n{sentence2}\n"
     )
     choices = ["No", "Yes"]
+    soft_prompt = (
+        "Determine if the word has the same meaning in both sentences based on context."
+    )
 
     def get_prompt(self, batch) -> Tuple[List[str], List[str]]:
         sources = []
@@ -191,6 +197,9 @@ class SST5Template(PromptTemplate):
 class AGNewsTemplate(PromptTemplate):
     template = "What is the most accurate label for this news article?\n{text}\n"
     choices = ["World", "Sports", "Business", "Sci/Tech"]
+    soft_prompt = (
+        "You are a knowledgeable assistant trained to categorize news articles into specific domains."
+    )
 
     def get_prompt(self, batch) -> Tuple[List[str], List[str]]:
         sources = [self.template.format(text=text) for text in batch["text"]]
@@ -220,6 +229,29 @@ class YelpTemplate(PromptTemplate):
     template = "Based on the following review text, determine the star rating (from 1 to 5):\n" \
                "Review Text: {text}\nStar Rating (1-5): "
     choices = ["1 star", "2 stars", "3 stars", "4 stars", "5 stars"]
+    soft_prompt = (
+        "Assign a star rating based on the review's overall sentiment. "
+        "1-2 stars for negative feedback, 3 stars for neutral, and 4-5 stars for positive feedback."
+    )
+
+    def get_prompt(self, batch) -> Tuple[List[str], List[str]]:
+        sources = [self.template.format(text=text) for text in batch["text"]]
+        if self.train:
+            targets = [self.choices[choice_idx] + self.tokenizer.eos_token for choice_idx in batch['class']]
+            return sources, targets
+        else:
+            choices = [choice + self.tokenizer.eos_token for choice in self.choices]
+            return sources, choices
+
+
+class YelpPolarityTemplate(PromptTemplate):
+    template = "Based on the following review text, determine the sentiment polarity (positive or negative):\n" \
+               "Review Text: {text}\nSentiment Polarity (positive/negative): "
+    choices = ["negative", "positive"]
+    soft_prompt = (
+        "Identify the polarity of the review, where positive indicates a favorable sentiment "
+        "and negative indicates an unfavorable sentiment."
+    )
 
     def get_prompt(self, batch) -> Tuple[List[str], List[str]]:
         sources = [self.template.format(text=text) for text in batch["text"]]
@@ -243,8 +275,10 @@ DATASET_TO_TEMPLATE = {
     "mcl-wic": WiCTemplate,
     "rte": RTETemplate,
     "snli": SNLITemplate,
+    "mnli": SNLITemplate,
     "sst-5": SST5Template,
     "ag-news": AGNewsTemplate,
     "masakha-news": MasakhaNewsTemplate,
-    "yelp": YelpTemplate
+    "yelp": YelpTemplate,
+    "yelp-p": YelpPolarityTemplate
 }

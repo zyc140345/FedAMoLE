@@ -14,6 +14,7 @@ DATASET2TASK_TYPE = {
     "squad": "causal_lm",
     "ms-marco": "causal_lm",
     "snli": "cls_lm",
+    "mnli": "cls_lm",
     "sst-5": "cls_lm",
     "rte": "cls_lm",
     "wic": "cls_lm",
@@ -22,7 +23,8 @@ DATASET2TASK_TYPE = {
     "boolq": "cls_lm",
     "ag-news": "cls_lm",
     "masakha-news": "cls_lm",
-    "yelp": "cls_lm"
+    "yelp": "cls_lm",
+    "yelp-p": "cls_lm"
 }
 
 
@@ -189,6 +191,24 @@ def load_dataset(
             ratios = get_ratios(ratio_train_to_aux, ratio_eval, ratio_test)
 
         return dataset, ratios, None
+    elif dataset_name.lower() == 'mnli':
+        dataset = ds.load_dataset("nyu-mll/glue", "mnli")
+        dataset = dataset.rename_column("label", "class")
+        dataset = ds.concatenate_datasets([dataset["train"], dataset["validation_matched"], dataset["test_matched"]])
+
+        # down sample
+        if down_sample_rate < 1.0:
+            indices = list(range(len(dataset)))
+            random.shuffle(indices)
+            dataset = dataset.select(indices[:int(len(dataset) * down_sample_rate)])
+
+        # compute split ratios
+        ratios = None
+        if ratio_train_to_aux is not None and ratio_eval is not None:
+            ratio_test = 0.1
+            ratios = get_ratios(ratio_train_to_aux, ratio_eval, ratio_test)
+
+        return dataset, ratios, None
     elif dataset_name.lower() == 'sst-5':
         dataset = ds.load_dataset("SetFit/sst5")
         total_samples = len(dataset["train"]) + len(dataset["validation"]) + len(dataset["test"])
@@ -304,6 +324,24 @@ def load_dataset(
         return dataset, ratios, None
     elif dataset_name.lower() == 'yelp':
         dataset = ds.load_dataset("Yelp/yelp_review_full")
+        ratio_test = len(dataset["test"]) / (len(dataset["train"]) + len(dataset["test"]))
+        dataset = dataset.rename_column("label", "class")
+        dataset = ds.concatenate_datasets([dataset["train"], dataset["test"]])
+
+        # down sample
+        if down_sample_rate < 1.0:
+            indices = list(range(len(dataset)))
+            random.shuffle(indices)
+            dataset = dataset.select(indices[:int(len(dataset) * down_sample_rate)])
+
+        # compute split ratios
+        ratios = None
+        if ratio_train_to_aux is not None and ratio_eval is not None:
+            ratios = get_ratios(ratio_train_to_aux, ratio_eval, ratio_test)
+
+        return dataset, ratios, None
+    elif dataset_name.lower() == 'yelp-p':
+        dataset = ds.load_dataset("fancyzhx/yelp_polarity")
         ratio_test = len(dataset["test"]) / (len(dataset["train"]) + len(dataset["test"]))
         dataset = dataset.rename_column("label", "class")
         dataset = ds.concatenate_datasets([dataset["train"], dataset["test"]])

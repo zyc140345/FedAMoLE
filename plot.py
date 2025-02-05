@@ -45,6 +45,9 @@ DATASET_MAP = {
     'ag-news': 'AG News',
     'race': 'RACE',
     'snli': 'SNLI',
+    'mnli': 'MNLI',
+    'yelp': 'YELP',
+    'yelp-p': 'YELP-P'
 }
 
 COLORS = ['#D96248', '#554687', '#F2A81D', '#285947', '#9B41D1', '#72DB1A', '#342B56', '#4A96D9', '#F22E8A', '#FF0200']
@@ -597,14 +600,15 @@ if __name__ == '__main__':
     # Uncomment one of the following parts to generate the corresponding figure in the paper
 
     # Fig. 5
-    # root_dir = './logs'
+    root_dir = './logs'
     # save_dir = './figures'
-    # plot_metric_per_round(root_dir, save_dir, n_col=1, last=True, round_step=2, sep_legend=True)
+    save_dir = None
+    plot_metric_per_round(root_dir, save_dir, n_col=1, last=True, round_step=2, sep_legend=True)
 
     # Fig. 6
-    root_dir = './logs'
-    save_dir = './figures'
-    plot_metric_per_client_num(root_dir, save_dir, include_ft=True, last=True, sep_legend=True)
+    # root_dir = './logs'
+    # save_dir = './figures'
+    # plot_metric_per_client_num(root_dir, save_dir, include_ft=True, last=True, sep_legend=True)
 
     # Fig. 7
     # root_dir = './logs'

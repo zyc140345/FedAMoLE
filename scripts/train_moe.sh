@@ -7,6 +7,7 @@ PYTHON_PATH='python'  # Change this to the path of your Python executable.
 nohup python -u run.py \
   --python_path $PYTHON_PATH \
   --algorithms fed_moe \
+  --test_init true \
   --model_name llama3.2-1b \
   --precision fp16 \
   --lr 5e-5 \
@@ -21,6 +22,7 @@ nohup python -u run.py \
 nohup python -u run.py \
   --python_path $PYTHON_PATH \
   --algorithms fed_moe \
+  --test_init true \
   --model_name llama3.2-1b \
   --precision fp16 \
   --lr 5e-5 \
@@ -35,6 +37,7 @@ nohup python -u run.py \
 nohup python -u run.py \
   --python_path $PYTHON_PATH \
   --algorithms fed_moe \
+  --test_init true \
   --model_name llama3.2-1b \
   --precision fp16 \
   --lr 5e-5 \
