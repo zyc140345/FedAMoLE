@@ -36,6 +36,8 @@ ALGO2METRIC_SUFFIX = {
     'fed_moe_no_amole': '',
     'fed_moe_no_amole_rsea': '',
     'fed_moe_no_shared': '',
+    'fed_moe_static_homo': '',
+    'fed_moe_static': '',
     'fdlora': '',
     'learned_adaptive_training': '_mutual_ensemble_adaptive',
     'mutual': '_mutual_ensemble'

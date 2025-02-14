@@ -42,7 +42,7 @@ This repository contains the official implementation for the work
 |   ├── tune_hyper_params.sh  // a script to reproduce Fig. 9
 |   └── tune_client_num.sh  // a script to reproduce Fig. 6
 ├── node.py  // inplementation of FedAMoLE's server and client nodes
-├── optimize.py  // implementation of Problem IV.1 optimization
+├── optimize.py  // implementation of Problem C.1 optimization
 ├── util.py  // general utilities
 ├── main.py  // entrance to run FedAMoLE
 ├── train_baselines.py  // entrance to run baselines
@@ -95,6 +95,3 @@ To generate figures, modify `plot.py` to specify the figure type and the path to
 mkdir figures
 python plot.py
 ```
-
-## License
-This project adopts the MIT License. If the implementations and/or our paper were useful to you, please consider citing this work.

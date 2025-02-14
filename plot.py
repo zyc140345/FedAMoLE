@@ -33,6 +33,8 @@ ALG_MAP = {
     'fed_moe_no_amole': 'FedAMoLE-A',
     'fed_moe_no_rsea': 'FedAMoLE-R',
     'fed_moe_no_shared': 'FedAMoLE-S',
+    'fed_moe_static_homo': 'FedAMoLE-H',
+    'fed_moe_static': 'FedAMoLE-D'
 }
 
 DATASET_MAP = {
