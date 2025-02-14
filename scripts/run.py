@@ -21,7 +21,9 @@ MOE_ARGS = [
     'top_k',
     'random_dispatch',
     'save_embs',
-    'test_init'
+    'test_init',
+    'static_arch',
+    'homo_arch'
 ]
 
 
@@ -101,6 +103,10 @@ if __name__ == '__main__':
                         help='whether to save the embeddings of the experts and the shared expert.')
     parser.add_argument('--test_init', default=False, type=strtobool,
                         help='whether to test test the initial model.')
+    parser.add_argument('--static_arch', default=False, type=strtobool,
+                        help='Whether to use static model architectures throughout the FL progress.')
+    parser.add_argument('--homo_arch', default=False, type=strtobool,
+                        help='Whether to use homogeneous model architectures across clients..')
 
     # Optimizer settings
     parser.add_argument('--lr', default=5e-5, type=float,

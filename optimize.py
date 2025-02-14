@@ -12,11 +12,17 @@ def optimize_expert_dispatch(prob_gate: np.ndarray, args) -> np.ndarray:
 
     expert_dispatch = cp.Variable((num_experts, num_clients), boolean=True)  # Variables
     objective = cp.Maximize(cp.sum(cp.multiply(prob_gate, expert_dispatch)))
-    constraints = [
-        cp.sum(expert_dispatch, axis=1) == expert_choices,
-        cp.sum(expert_dispatch, axis=0) >= 2,
-        cp.sum(expert_dispatch, axis=0) <= max_experts
-    ]
+    if args.homo_arch:
+        constraints = [
+            cp.sum(expert_dispatch, axis=1) == expert_choices,
+            cp.sum(expert_dispatch, axis=0) == num_experts * expert_choices // num_clients
+        ]
+    else:
+        constraints = [
+            cp.sum(expert_dispatch, axis=1) == expert_choices,
+            cp.sum(expert_dispatch, axis=0) >= 2,
+            cp.sum(expert_dispatch, axis=0) <= max_experts
+        ]
 
     # Optimize problem
     problem = cp.Problem(objective, constraints)

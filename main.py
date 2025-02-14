@@ -60,6 +60,10 @@ if __name__ == '__main__':
                         help='Whether to save embeddings of the client data and domain experts.')
     parser.add_argument('--test_init', default=False, type=strtobool,
                         help='Whether to test the initial model.')
+    parser.add_argument('--static_arch', default=False, type=strtobool,
+                        help='Whether to use static model architectures throughout the FL progress.')
+    parser.add_argument('--homo_arch', default=False, type=strtobool,
+                        help='Whether to use homogeneous model architectures across clients..')
 
     # Optimizer settings
     parser.add_argument('--lr', default=5e-5, type=float,
@@ -108,7 +112,13 @@ if __name__ == '__main__':
     set_seed(args.seed)
 
     # set default log root
-    algorithm = 'fed_moe_random' if args.random_dispatch else 'fed_moe'
+    algorithm = 'fed_moe'
+    if args.random_dispatch:
+        algorithm += '_random'
+    if args.static_arch:
+        algorithm += '_static'
+    if args.homo_arch:
+        algorithm += '_homo'
     if args.log_root is None:
         args.log_root = os.path.join(
             os.path.dirname(__file__), 'logs', args.client_dataset_name, args.data_he,
@@ -230,7 +240,8 @@ if __name__ == '__main__':
                 client.load_model()
                 if args.do_profile:
                     start.record()
-                client.compute_embs(r)
+                if r == 1 or not args.static_arch:
+                    client.compute_embs(r)
                 if args.do_profile:
                     aggregate_time[r - 1] = max(aggregate_time[r - 1], get_elapsed_time(start, end))
                 client.release_model()
@@ -238,7 +249,7 @@ if __name__ == '__main__':
             # aggregate and dispatch experts
             if args.do_profile:
                 start.record()
-            server.aggregate()
+            server.aggregate(r)
             server.dispatch_experts(r)
             if args.do_profile:
                 aggregate_time[r - 1] += get_elapsed_time(start, end)

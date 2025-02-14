@@ -63,7 +63,7 @@ class Server:
             client.server = self
             client.model = self.global_model
 
-    def aggregate(self):
+    def aggregate(self, r):
         if self.args.do_profile:
             for client in self.clients:
                 client.upload_volume.append(0)
@@ -88,8 +88,9 @@ class Server:
                 profile_and_collect("expert_embs", expert_embs, None)
                 profile_and_collect("token_embs", token_embs, None)
                 profile_and_collect("token_proj", token_projections, {})
-            expert_embs = torch.cat(expert_embs, dim=0)  # (num_experts, r)
-            token_embs = torch.cat(token_embs, dim=0)  # (num_clients, r)
+            if r == 1 or not self.args.static_arch:
+                expert_embs = torch.cat(expert_embs, dim=0)  # (num_experts, r)
+                token_embs = torch.cat(token_embs, dim=0)  # (num_clients, r)
 
             # aggregate the token projection
             token_proj_avg = copy.deepcopy(token_projections[0])
@@ -113,17 +114,19 @@ class Server:
                 experts[order_part[0]] = expert_weight_avg
 
             # aggregate the expert embeddings with the same IDs
-            for order_part in order_parts:
-                expert_embs[order_part[0], :] = expert_embs[order_part.tolist(), :].mean(dim=0)
+            if r == 1 or not self.args.static_arch:
+                for order_part in order_parts:
+                    expert_embs[order_part[0], :] = expert_embs[order_part.tolist(), :].mean(dim=0)
 
             # save the aggregated results
             self.token_proj[module_name] = token_proj_avg
             avg_idx = [order_part.tolist()[0] for order_part in order_parts]
             self.expert_ids[module_name] = [expert_ids[idx] for idx in avg_idx]
             self.experts[module_name] = [experts[idx] for idx in avg_idx]
-            expert_embs = expert_embs[avg_idx[:-1], :]  # exclude the shared expert
-            self.expert_embs[module_name] = expert_embs
-            self.token_embs[module_name] = token_embs
+            if r == 1 or not self.args.static_arch:
+                expert_embs = expert_embs[avg_idx[:-1], :]  # exclude the shared expert
+                self.expert_embs[module_name] = expert_embs
+                self.token_embs[module_name] = token_embs
 
     def dispatch_experts(self, r):
         if self.args.do_profile:
@@ -134,20 +137,21 @@ class Server:
             for module_name in progress_bar:
                 num_experts = self.args.expert_num  # exclude the shared expert
                 num_clients = self.args.client_num
-                if r == 0 or self.args.random_dispatch:  # randomly dispatch experts at the first round
-                    routing_probs = torch.rand(num_experts, num_clients)  # (num_experts, num_clients)
-                else:
-                    expert_embs = self.expert_embs[module_name]  # (num_experts, r)
-                    token_embs = self.token_embs[module_name]  # (num_clients, r)
-                    scale = math.sqrt(self.args.lora_rank)
-                    routing_probs = expert_embs @ token_embs.T / scale  # (num_experts, num_clients)
-                routing_probs = F.softmax(routing_probs, dim=1).float().numpy()
-                expert_dispatch = optimize_expert_dispatch(routing_probs, self.args)
-                expert_dispatch = np.vstack((
-                    expert_dispatch,
-                    np.ones((1, num_clients))  # dispatch the shared expert to all clients
-                ))
-                self.expert_dispatch[module_name] = expert_dispatch
+                if r < 2 or not self.args.static_arch:  # obtain the expert dispatching at the first two rounds
+                    if r == 0 or self.args.random_dispatch:  # randomly dispatch experts at the first round
+                        routing_probs = torch.rand(num_experts, num_clients)  # (num_experts, num_clients)
+                    else:
+                        expert_embs = self.expert_embs[module_name]  # (num_experts, r)
+                        token_embs = self.token_embs[module_name]  # (num_clients, r)
+                        scale = math.sqrt(self.args.lora_rank)
+                        routing_probs = expert_embs @ token_embs.T / scale  # (num_experts, num_clients)
+                    routing_probs = F.softmax(routing_probs, dim=1).float().numpy()
+                    expert_dispatch = optimize_expert_dispatch(routing_probs, self.args)
+                    expert_dispatch = np.vstack((
+                        expert_dispatch,
+                        np.ones((1, num_clients))  # dispatch the shared expert to all clients
+                    ))
+                    self.expert_dispatch[module_name] = expert_dispatch
 
                 for client_idx, client in enumerate(self.clients):
                     expert_ids = np.where(self.expert_dispatch[module_name][:, client_idx])[0].tolist()
