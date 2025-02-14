@@ -63,7 +63,7 @@ class Server:
             client.server = self
             client.model = self.global_model
 
-    def aggregate(self, r):
+    def aggregate(self):
         if self.args.do_profile:
             for client in self.clients:
                 client.upload_volume.append(0)
@@ -85,10 +85,11 @@ class Server:
 
                 profile_and_collect("expert_ids", expert_ids, [], True)
                 profile_and_collect("experts", experts, [], True)
-                profile_and_collect("expert_embs", expert_embs, None)
-                profile_and_collect("token_embs", token_embs, None)
                 profile_and_collect("token_proj", token_projections, {})
-            if r == 1 or not self.args.static_arch:
+                if not self.args.static_arch:
+                    profile_and_collect("expert_embs", expert_embs, None)
+                    profile_and_collect("token_embs", token_embs, None)
+            if not self.args.static_arch:
                 expert_embs = torch.cat(expert_embs, dim=0)  # (num_experts, r)
                 token_embs = torch.cat(token_embs, dim=0)  # (num_clients, r)
 
@@ -114,7 +115,7 @@ class Server:
                 experts[order_part[0]] = expert_weight_avg
 
             # aggregate the expert embeddings with the same IDs
-            if r == 1 or not self.args.static_arch:
+            if not self.args.static_arch:
                 for order_part in order_parts:
                     expert_embs[order_part[0], :] = expert_embs[order_part.tolist(), :].mean(dim=0)
 
@@ -123,7 +124,7 @@ class Server:
             avg_idx = [order_part.tolist()[0] for order_part in order_parts]
             self.expert_ids[module_name] = [expert_ids[idx] for idx in avg_idx]
             self.experts[module_name] = [experts[idx] for idx in avg_idx]
-            if r == 1 or not self.args.static_arch:
+            if not self.args.static_arch:
                 expert_embs = expert_embs[avg_idx[:-1], :]  # exclude the shared expert
                 self.expert_embs[module_name] = expert_embs
                 self.token_embs[module_name] = token_embs
@@ -137,7 +138,7 @@ class Server:
             for module_name in progress_bar:
                 num_experts = self.args.expert_num  # exclude the shared expert
                 num_clients = self.args.client_num
-                if r < 2 or not self.args.static_arch:  # obtain the expert dispatching at the first two rounds
+                if r == 0 or not self.args.static_arch:  # construct static architectures at the first round
                     if r == 0 or self.args.random_dispatch:  # randomly dispatch experts at the first round
                         routing_probs = torch.rand(num_experts, num_clients)  # (num_experts, num_clients)
                     else:

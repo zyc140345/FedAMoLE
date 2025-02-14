@@ -240,7 +240,7 @@ if __name__ == '__main__':
                 client.load_model()
                 if args.do_profile:
                     start.record()
-                if r == 1 or not args.static_arch:
+                if not args.static_arch:
                     client.compute_embs(r)
                 if args.do_profile:
                     aggregate_time[r - 1] = max(aggregate_time[r - 1], get_elapsed_time(start, end))
@@ -249,7 +249,7 @@ if __name__ == '__main__':
             # aggregate and dispatch experts
             if args.do_profile:
                 start.record()
-            server.aggregate(r)
+            server.aggregate()
             server.dispatch_experts(r)
             if args.do_profile:
                 aggregate_time[r - 1] += get_elapsed_time(start, end)
