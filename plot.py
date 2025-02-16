@@ -33,8 +33,9 @@ ALG_MAP = {
     'fed_moe_no_amole': 'FedAMoLE-A',
     'fed_moe_no_rsea': 'FedAMoLE-R',
     'fed_moe_no_shared': 'FedAMoLE-S',
-    'fed_moe_static_homo': 'FedAMoLE-H',
-    'fed_moe_static': 'FedAMoLE-D'
+    'fed_moe_static': 'FedMoLE',
+    'fed_moe_no_shared_static': 'FedMoLE-S',
+    'fed_moe_static_homo': 'FedMoLE-H'
 }
 
 DATASET_MAP = {
@@ -209,7 +210,7 @@ def plot_metric_per_round(root_dir, save_dir=None, n_col=2, last=False,
 
 
 def plot_metric_per_iid(root_dir, save_dir=None, last=False, sep_legend=False):
-    result = evaluation.summary(root_dir, last=False, return_all=True)
+    result = evaluation.summary(root_dir, last=last, return_all=True)
 
     def calc_metric(x):
         return x[:, -1] if last else x.max(axis=1)
@@ -588,6 +589,38 @@ def plot_logits_scatter(root_dir: str, seed: int, save_dir=None, layer_step=1, s
                     fig.savefig(save_path, backend='pgf')
 
 
+def plot_ablation_bar(root_dir, save_dir=None, last=False):
+    result = evaluation.summary(root_dir, last=last, return_all=True, include_ft=True)
+    algorithms = ['fed_avg_tune', 'fed_moe_static', 'fed_moe']
+    algo_labels = ['FedIT-FT', 'FedMoLE', 'FedAMoLE (ours)']
+    datasets = ['snli', 'natural-instruct']
+    y_lims = [(85, 89), (50, 62)]
+
+    def calc_metric(x):
+        return np.mean(x[:, -1]) if last else np.mean(x.max(axis=1))
+
+    for i, dataset in enumerate(datasets):
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        task_type = DATASET2TASK_TYPE[dataset]
+        metric = 'rouge' if task_type == 'causal_lm' else 'acc'
+
+        metrics = [calc_metric(list(result[dataset].values())[0][algorithm]) for algorithm in algorithms]
+        colors = COLORS[:len(algorithms)]
+        ax.bar(algo_labels, metrics, color=colors, edgecolor='black', linewidth=0.5, width=0.4)
+
+        ax.set_ylim(*y_lims[i])
+        ax.set_ylabel('Accuracy (%)' if metric == 'acc' else 'ROUGE-L (%)', fontsize=32)
+        ax.tick_params(labelsize=32)
+
+        fig.tight_layout()
+        fig.show()
+
+        if save_dir is not None:
+            save_path = os.path.join(save_dir, f'ablation_bar_{dataset}.pdf')
+            fig.savefig(save_path, backend='pgf')
+
+
 if __name__ == '__main__':
     zh_font = "Songti SC" if platform.system() == 'Darwin' else "SimSun"
     config = {
@@ -602,18 +635,22 @@ if __name__ == '__main__':
 
     # Uncomment one of the following parts to generate the corresponding figure in the paper
 
-    # Fig. 5
+    # Figure 2
     root_dir = './logs'
-    # save_dir = './figures'
-    save_dir = None
-    plot_metric_per_round(root_dir, save_dir, n_col=1, last=True, round_step=2, sep_legend=True)
+    save_dir = './figures'
+    plot_ablation_bar(root_dir, save_dir, last=True)
 
-    # Fig. 6
+    # Figure 6
+    # root_dir = './logs'
+    # save_dir = './figures'
+    # plot_metric_per_round(root_dir, save_dir, n_col=1, last=True, round_step=2, sep_legend=True)
+
+    # Figure 7
     # root_dir = './logs'
     # save_dir = './figures'
     # plot_metric_per_client_num(root_dir, save_dir, include_ft=True, last=True, sep_legend=True)
 
-    # Fig. 7
+    # Figure 8
     # seed = 42
     # set_seed(seed)
     # save_dir = './figures/logits_scatter'
@@ -622,12 +659,12 @@ if __name__ == '__main__':
     # root_dir = "./logs/natural-instruct/meta1/fed_moe/42/1732238685"
     # plot_logits_scatter(root_dir, seed=seed, save_dir=save_dir, layer_step=3, sep_legend=True)
 
-    # Fig. 8
+    # Figure 9
     # root_dir = './logs'
     # save_dir = './figures'
     # plot_metric_per_iid(root_dir, save_dir, last=True, sep_legend=True)
 
-    # Fig. 9
+    # Figure 10
     # root_dir = './logs'
     # save_dir = './figures'
     # plot_expert_choices_vs_lr(root_dir, save_dir, last=True)
