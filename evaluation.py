@@ -27,20 +27,21 @@ def rouge_score(hyp_ids, ref_ids, tokenizer) -> float:
 
 
 ALGO2METRIC_SUFFIX = {
+    'learned_adaptive_training': '_mutual_ensemble_adaptive',
+    'mutual': '_mutual_ensemble',
     'fed_avg': '',
     'fed_avg_tune': '',
     'fed_prompt': '',
     'fed_ptuning': '',
+    'fdlora': '',
     'fed_moe': '',
+    'fed_moe_no_amole_rsea': '',
     'fed_moe_no_rsea': '',
     'fed_moe_no_amole': '',
-    'fed_moe_no_amole_rsea': '',
     'fed_moe_no_shared': '',
-    'fed_moe_static_homo': '',
     'fed_moe_static': '',
-    'fdlora': '',
-    'learned_adaptive_training': '_mutual_ensemble_adaptive',
-    'mutual': '_mutual_ensemble'
+    'fed_moe_no_shared_static': '',
+    'fed_moe_static_homo': ''
 }
 
 

@@ -1,16 +1,16 @@
 # Personalized Federated Fine-Tuning for LLMs via Data-Driven Heterogeneous Model Architectures
 This repository contains the official implementation for the work 
 “Personalized Federated Fine-Tuning for LLMs via Data-Driven Heterogeneous Model Architectures”.
-> Large-scale instruction data is essential for aligning pre-trained Large Language Models (LLMs) 
-> with human instructions through instruction tuning. However, such data is often sourced from distinct clients, 
-> characterized by privacy concerns and heterogeneity. Federated Learning (FL) addresses privacy issues by 
-> enabling collaborative fine-tuning without data sharing. However, traditional FL assumes a uniform model structure 
-> and data distribution, making it ineffective for training on highly heterogeneous data with varying amounts and 
-> formats. To address this, we propose FedAMoLE—a lightweight, personalized FL framework enabling data-driven 
-> heterogeneous model architectures based on mixture of LoRA experts (MoLE). It features an adaptive MoLE module 
-> for aggregating heterogeneous models and a reverse selection-based expert assignment strategy to optimize model 
-> architectures based on local and global data distributions. Experiments across five scenarios show that FedAMoLE 
-> improves accuracy by an average of 5.14% over existing approaches while obtaining good scalability.
+> Large-scale instruction data is essential for aligning pretrained Large Language Models (LLMs) 
+> with human instructions, but may contain sensitive information that hinders its public sharing. 
+> Federated Learning (FL) enables collaborative fine-tuning of LLMs without data sharing. 
+> However, existing works on federated LLM fine-tuning usually adopt a uniform model architecture, 
+> making it hard to fit the highly heterogeneous data with varying amounts and formats. 
+> To address this, we propose FedAMoLE—a lightweight personalized FL framework enabling 
+> data-driven heterogeneous model architectures, featured by an adaptive mixture of LoRA experts (MoLE) module 
+> for enabling aggregation of heterogeneous models and a reverse selection-based expert assignment strategy 
+> to optimize model architectures based on data distributions. Experiments across five scenarios show that 
+> FedAMoLE improves accuracy by an average of 5.14% over existing approaches while obtaining good scalability.
 
 ## Project Structure
 ```
@@ -54,7 +54,8 @@ This repository contains the official implementation for the work
 ## Environment Setup
 1. Create a conda environment and install the dependencies
 ```shell
-git clone https://github.com/zyc140345/FedAMoLE.git && cd FedAMoLE
+wget https://anonymous.4open.science/api/repo/FedAMoLE/zip -O FedAMoLE.zip
+unzip -d FedAMoLE FedAMoLE.zip && cd FedAMoLE
 conda create -n fed_amole python==3.9.18
 conda activate fed_amole
 pip install -r requirements.txt
