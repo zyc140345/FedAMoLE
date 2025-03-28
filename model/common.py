@@ -23,6 +23,7 @@ MODEL_NAME2ID = {
     'opt-350m': "facebook/opt-350m",
     'falcon-1b': "tiiuae/falcon-rw-1b",
     'llama3.2-1b': "meta-llama/Llama-3.2-1B",
+    'llama3.2-3b': "meta-llama/Llama-3.2-3B",
     'gemma2-2b': "google/gemma-2-2b",
     'qwen2-0.5b': 'Qwen/Qwen2-0.5B',
     'qwen2-1.5b': 'Qwen/Qwen2-1.5B',
