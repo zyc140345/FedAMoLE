@@ -27,6 +27,8 @@ MODEL_NAME2ID = {
     'gemma2-2b': "google/gemma-2-2b",
     'qwen2-0.5b': 'Qwen/Qwen2-0.5B',
     'qwen2-1.5b': 'Qwen/Qwen2-1.5B',
+    'qwen2.5-0.5b': 'Qwen/Qwen2.5-0.5B',
+    'qwen2.5-1.5b': 'Qwen/Qwen2.5-1.5B',
     'switch-base-32': 'google/switch-base-32'
 }
 
