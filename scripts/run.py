@@ -21,6 +21,7 @@ MOE_ARGS = [
     'top_k',
     'random_dispatch',
     'save_embs',
+    'save_dispatch',
     'test_init',
     'static_arch',
     'homo_arch'
@@ -101,6 +102,8 @@ if __name__ == '__main__':
                         help='whether to randomly dispatch the experts to the clients.')
     parser.add_argument('--save_embs', default=False, type=strtobool,
                         help='whether to save the embeddings of the experts and the shared expert.')
+    parser.add_argument('--save_dispatch', default=False, type=strtobool,
+                        help='Whether to save the expert dispatching results.')
     parser.add_argument('--test_init', default=False, type=strtobool,
                         help='whether to test test the initial model.')
     parser.add_argument('--static_arch', default=False, type=strtobool,

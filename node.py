@@ -180,6 +180,11 @@ class Server:
                 self.expert_embs[module_name] = None
                 self.token_proj[module_name] = {}
 
+        if self.args.save_dispatch:
+            dispatch_path = os.path.join(self.args.log_root, "dispatch", f"round{r}_dispatch.pkl")
+            with open(dispatch_path, 'wb') as f:
+                pickle.dump(self.expert_dispatch, f)
+
 
 class Client:
     def __init__(

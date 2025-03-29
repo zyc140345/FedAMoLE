@@ -58,6 +58,8 @@ if __name__ == '__main__':
                         help='Whether to randomly assign experts to clients. (for ablation study)')
     parser.add_argument('--save_embs', default=False, type=strtobool,
                         help='Whether to save embeddings of the client data and domain experts.')
+    parser.add_argument('--save_dispatch', default=False, type=strtobool,
+                        help='Whether to save the expert dispatching results.')
     parser.add_argument('--test_init', default=False, type=strtobool,
                         help='Whether to test the initial model.')
     parser.add_argument('--static_arch', default=False, type=strtobool,
@@ -131,6 +133,8 @@ if __name__ == '__main__':
     os.makedirs(args.log_root)
     if args.save_embs:
         os.makedirs(os.path.join(args.log_root, 'embs'))
+    if args.save_dispatch:
+        os.makedirs(os.path.join(args.log_root, 'dispatch'))
 
     # validate the MoE settings
     if args.expert_num * args.expert_choices > args.client_num * args.max_experts:
