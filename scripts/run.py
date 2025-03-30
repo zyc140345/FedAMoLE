@@ -145,6 +145,8 @@ if __name__ == '__main__':
                         help='the level of logging, optional in ["summarized", "detailed"].')
     parser.add_argument('--seeds', default='42,62,82', type=str,
                         help='the random seed for reproducibility.')
+    parser.add_argument('--partition_seed', default=None, type=int,
+                        help='Random seed for heterogeneous data partition.')
     parser.add_argument('--max_retry_times', default=2, type=int)
 
     args = parser.parse_args()

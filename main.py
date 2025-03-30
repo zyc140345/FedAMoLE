@@ -103,6 +103,8 @@ if __name__ == '__main__':
                         help='Model evaluation metric, options: ["last", "bmta"].')
     parser.add_argument('--seed', default=int(str(today.year) + str(today.month) + str(today.day)), type=int,
                         help='Random seed for reproducibility.')
+    parser.add_argument('--partition_seed', default=None, type=int,
+                        help='Random seed for heterogeneous data partition.')
     parser.add_argument('--time_stamp', default=int(time.time()), type=int,
                         help='Current timestamp. (to distinguish between different runs)')
     parser.add_argument('--do_profile', default=False, type=strtobool,
@@ -110,8 +112,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # set seed for reproducibility
-    set_seed(args.seed)
+    # set seed for data partition
+    if args.partition_seed is not None:
+        set_seed(args.partition_seed)
+    else:
+        set_seed(args.seed)
 
     # set default log root
     algorithm = 'fed_moe'
@@ -166,6 +171,10 @@ if __name__ == '__main__':
         ratio_eval=args.ratio_eval
     )
     data_loader = ClientDataLoader(dataset, ratios, label_encoder, args)
+
+    # set seed for federated learning
+    if args.partition_seed is not None:
+        set_seed(args.seed)
 
     # ===== Construct clients and server =====
     suffix = f'.{args.client_dataset_name}_{args.data_he}_{args.seed}_{args.time_stamp}'

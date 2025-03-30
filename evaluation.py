@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import json
+import pickle
 from typing import Dict, Any
 
 from rouge import Rouge
@@ -223,3 +224,56 @@ def summary(root_dir, last=False, return_all=False, include_ft=False):
 
     if return_all:
         return result_all
+
+
+def evaluate_stability(root_dir, client_id=0):
+    dataset = list_dir(root_dir)[0]
+    iid = list_dir(os.path.join(root_dir, dataset))[0]
+    algorithm = list_dir(os.path.join(root_dir, dataset, iid))[0]
+    seeds = list_dir(os.path.join(root_dir, dataset, iid, algorithm))
+    root_dir = os.path.join(root_dir, dataset, iid, algorithm)
+
+    client_dispatch = {}  # <module_name, (rounds, num_experts)>
+    client_expert_num = {}  # <module_name, (num_seeds, rounds)>
+    for seed_id, seed in enumerate(seeds):
+        timestamp = list_dir(os.path.join(root_dir, seed))[0]
+        log_dir = os.path.join(root_dir, seed, timestamp)
+        with open(os.path.join(log_dir, 'params.json'), 'r') as f:
+            params = json.load(f)
+            rounds = params['rounds']
+
+        if client_expert_num:
+            for module_name in client_expert_num.keys():
+                client_expert_num[module_name].append([])
+        for r in range(rounds):
+            dispatch_path = os.path.join(log_dir, f'dispatch/round{r}_dispatch.pkl')
+            with open(dispatch_path, 'rb') as f:
+                expert_dispatch = pickle.load(f)
+
+            if seed_id == 0:
+                if not client_dispatch:
+                    client_dispatch = {
+                        module_name: dispatch[:-1, client_id]
+                        for module_name, dispatch in expert_dispatch.items()
+                    }
+                else:
+                    for module_name, dispatch in expert_dispatch.items():
+                        client_dispatch[module_name] = np.vstack([
+                            client_dispatch[module_name], dispatch[:-1, client_id]
+                        ])
+
+            if not client_expert_num:
+                client_expert_num = {
+                    module_name: [[dispatch[:-1, client_id].sum()]]
+                    for module_name, dispatch in expert_dispatch.items()
+                }
+            else:
+                for module_name, dispatch in expert_dispatch.items():
+                    client_expert_num[module_name][-1].append(dispatch[:-1, client_id].sum())
+
+    client_dispatch = {k: v.astype(int) for k, v in client_dispatch.items()}
+    client_expert_num = {k: np.array(v, dtype=int) for k, v in client_expert_num.items()}
+
+
+if __name__ == '__main__':
+    evaluate_stability('logs', client_id=5)
