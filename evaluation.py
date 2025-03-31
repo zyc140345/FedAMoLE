@@ -274,6 +274,8 @@ def evaluate_stability(root_dir, client_id=0):
     client_dispatch = {k: v.astype(int) for k, v in client_dispatch.items()}
     client_expert_num = {k: np.array(v, dtype=int) for k, v in client_expert_num.items()}
 
+    return client_dispatch, client_expert_num
+
 
 if __name__ == '__main__':
-    evaluate_stability('logs', client_id=5)
+    evaluate_stability('logs', client_id=4)

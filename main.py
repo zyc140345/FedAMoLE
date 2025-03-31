@@ -225,16 +225,17 @@ if __name__ == '__main__':
                     if args.do_profile:
                         train_time[r - 1][client_idx] = get_elapsed_time(start, end)
 
-                eval_loss[r] += client.eval()  # eval
+                if not args.save_dispatch:
+                    eval_loss[r] += client.eval()  # eval
 
-                if args.metric == "bmta" or r == args.rounds:  # test
-                    if args.do_profile:
-                        start.record()
-                    metrics = client.test(r)
-                    if args.do_profile:
-                        test_time[r][client_idx] = get_elapsed_time(start, end)
-                    test_loss[r] += metrics[0]
-                    test_acc[r] += metrics[1]
+                    if args.metric == "bmta" or r == args.rounds:  # test
+                        if args.do_profile:
+                            start.record()
+                        metrics = client.test(r)
+                        if args.do_profile:
+                            test_time[r][client_idx] = get_elapsed_time(start, end)
+                        test_loss[r] += metrics[0]
+                        test_acc[r] += metrics[1]
 
                 client.release_model()
 

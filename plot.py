@@ -636,14 +636,15 @@ if __name__ == '__main__':
     # Uncomment one of the following parts to generate the corresponding figure in the paper
 
     # Figure 2
-    root_dir = './logs'
-    save_dir = './figures'
-    plot_ablation_bar(root_dir, save_dir, last=True)
-
-    # Figure 6
     # root_dir = './logs'
     # save_dir = './figures'
-    # plot_metric_per_round(root_dir, save_dir, n_col=1, last=True, round_step=2, sep_legend=True)
+    # plot_ablation_bar(root_dir, save_dir, last=True)
+
+    # Figure 6
+    root_dir = './logs'
+    # save_dir = './figures'
+    save_dir = None
+    plot_metric_per_round(root_dir, save_dir, n_col=1, last=True, round_step=2, sep_legend=True)
 
     # Figure 7
     # root_dir = './logs'
