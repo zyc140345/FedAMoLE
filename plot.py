@@ -594,13 +594,13 @@ def plot_ablation_bar(root_dir, save_dir=None, last=False):
     algorithms = ['fed_avg_tune', 'fed_moe_static', 'fed_moe']
     algo_labels = ['FedIT-FT', 'FedMoLE', 'FedAMoLE (ours)']
     datasets = ['snli', 'natural-instruct']
-    y_lims = [(85, 89), (50, 62)]
+    y_lims = [(85, 89), (50, 61.5)]
 
     def calc_metric(x):
         return np.mean(x[:, -1]) if last else np.mean(x.max(axis=1))
 
     for i, dataset in enumerate(datasets):
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(10, 5))
 
         task_type = DATASET2TASK_TYPE[dataset]
         metric = 'rouge' if task_type == 'causal_lm' else 'acc'
@@ -636,15 +636,14 @@ if __name__ == '__main__':
     # Uncomment one of the following parts to generate the corresponding figure in the paper
 
     # Figure 2
-    # root_dir = './logs'
-    # save_dir = './figures'
-    # plot_ablation_bar(root_dir, save_dir, last=True)
+    root_dir = './logs'
+    save_dir = './figures'
+    plot_ablation_bar(root_dir, save_dir, last=True)
 
     # Figure 6
-    root_dir = './logs'
+    # root_dir = './logs'
     # save_dir = './figures'
-    save_dir = None
-    plot_metric_per_round(root_dir, save_dir, n_col=1, last=True, round_step=2, sep_legend=True)
+    # plot_metric_per_round(root_dir, save_dir, n_col=1, last=True, round_step=2, sep_legend=True)
 
     # Figure 7
     # root_dir = './logs'
