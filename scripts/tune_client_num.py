@@ -46,28 +46,29 @@ if __name__ == '__main__':
 
     # FL settings
     parser.add_argument('--client_nums', default='10,20,30,40,50', type=str,
-                        help='the numbers of clients.')
+                        help='Total numbers of clients.')
 
     # Optimizer settings
     parser.add_argument('--algorithms', default='fed_avg,fdlora,fed_moe', type=str,
-                        help='optional in ["learned_adaptive_training", "mutual". '
-                             '"fed_avg", "fed_prompt", "fed_ptuning", "fed_moe"]')
+                        help='Algorithms to use, options: ["learned_adaptive_training", "mutual", '
+                             '"fed_avg", "fed_prompt", "fed_ptuning", "fdlora", "fed_moe"].')
     parser.add_argument('--do_ft', default=False, type=strtobool,
-                        help='whether to finetune the global model after aggregation.')
+                        help='Whether to fine-tune the global model after aggregation.')
 
     # Model settings
     parser.add_argument('--model_name', type=str, required=True)
 
     # Data settings
     parser.add_argument('--client_dataset_name', type=str, required=True,
-                        help='the name of the client dataset.')
+                        help="Name of the client's local dataset.")
 
     # Other settings
     parser.add_argument('--python_path', default='/home/zyc/miniconda3/bin/python', type=str,
-                        help='the path of python interpreter.')
+                        help='The path to the python interpreter.')
     parser.add_argument('--gpus', default='0,1,2', type=str,
-                        help='the indices of GPUs to use.')
-    parser.add_argument('--max_retry_times', default=2, type=int)
+                        help='GPU indices to use.')
+    parser.add_argument('--max_retry_times', default=2, type=int,
+                        help='Maximum number of retries for failed training jobs.')
 
     args = parser.parse_args()
 

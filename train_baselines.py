@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     # FL settings
     parser.add_argument('--client_num', default=10, type=int,
-                        help='Total number of clients')
+                        help='Total number of clients.')
     parser.add_argument('--rounds', '-r', default=30, type=int,
                         help='Number of communication rounds.')
     parser.add_argument('--local_epochs', default=1, type=int,
@@ -54,7 +54,7 @@ if __name__ == '__main__':
                         help='Batch size for local fine-tuning.')
     parser.add_argument('--algorithm', default='fed_avg', type=str,
                         help='Algorithm to use, options: ["learned_adaptive_training", "mutual", '
-                             '"fed_avg", "fed_prompt", "fed_ptuning", "fdlora"]')
+                             '"fed_avg", "fed_prompt", "fed_ptuning", "fdlora"].')
 
     # Data settings
     parser.add_argument('--client_dataset_name', '-d', default='dolly-15k', type=str,

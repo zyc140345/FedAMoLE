@@ -73,29 +73,30 @@ if __name__ == '__main__':
 
     # MoE settings
     parser.add_argument('--expert_nums', default='15,20,25,30', type=str,
-                        help='the total numbers of the non-shared experts.')
+                        help='Total numbers of domain experts per module.')
     parser.add_argument('--expert_choices', default='2,3,4,5', type=str,
-                        help='the numbers of clients chosen by each expert.')
+                        help='Numbers of clients selected by each domain expert.')
     parser.add_argument('--max_experts', default='8,10,12,14', type=str,
-                        help='the maximum numbers of experts for each client.')
+                        help='Maximum numbers of domain experts assigned to each client module.')
 
     # Optimizer settings
     parser.add_argument('--lrs', default='5e-4,1e-4,5e-5,1e-5', type=str,
-                        help='the learning rates of local training.')
+                        help='Learning rates for local fine-tuning.')
 
     # Data settings
     parser.add_argument('--client_dataset_name', type=str, required=True,
-                        help='the name of the client dataset.')
+                        help="Name of the client's local dataset.")
     parser.add_argument('--data_hes', type=str, required=True,
-                        help='the heterogeneity of the client data distributions, '
-                             'optional in ["iid", "dir<alpha>", "meta<class_per_client>"].')
+                        help='Heterogeneity settings of client data distributions, '
+                             'options: ["iid", "dir<alpha>", "meta<class_per_client>"].')
 
     # Other settings
     parser.add_argument('--python_path', default='/home/zyc/miniconda3/bin/python', type=str,
-                        help='the path of python interpreter.')
+                        help='The path to the python interpreter.')
     parser.add_argument('--gpus', default='0,1,2', type=str,
-                        help='the indices of GPUs to use.')
-    parser.add_argument('--max_retry_times', default=2, type=int)
+                        help='GPU indices to use.')
+    parser.add_argument('--max_retry_times', default=2, type=int,
+                        help='Maximum number of retries for failed training jobs.')
 
     args = parser.parse_args()
 

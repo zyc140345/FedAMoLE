@@ -66,88 +66,90 @@ if __name__ == '__main__':
 
     # FL settings
     parser.add_argument('--client_num', default=10, type=int,
-                        help='the number of clients.')
+                        help='Total number of clients.')
     parser.add_argument('--rounds', default=30, type=int,
-                        help='the number of rounds for federated averaging.')
+                        help='Number of communication rounds.')
     parser.add_argument('--local_epochs', default=1, type=int,
-                        help='the number of local epochs before sharing the local updates.')
+                        help='Number of epochs each client performs during local fine-tuning in one round.')
     parser.add_argument('--client_step', default=None, type=int,
-                        help='the number of steps for each client to train in each round.')
+                        help='Number of steps each client performs during local fine-tuning in one round.')
     parser.add_argument('--do_ft', default=False, type=strtobool,
-                        help='whether to finetune the global model after aggregation.')
+                        help='Whether to fine-tune the global model after aggregation.')
 
     # Model settings
     parser.add_argument('--model_name', type=str, required=True)
     parser.add_argument('--precision', default='fp16', type=str,
-                        help='the backbone precision, optional in ["fp16", "fp32"].')
+                        help='Backbone precision, options: ["fp16", "fp32"].')
     parser.add_argument('--lora_rank', default=8, type=int,
-                        help='the rank of lora adapter.')
+                        help='Rank of the LoRA adapter.')
     parser.add_argument('--lora_alpha', default=16, type=float,
-                        help='the alpha of lora adapter.')
+                        help='Alpha parameter of the LoRA adapter.')
     parser.add_argument('--lora_dropout', default=0.05, type=int,
-                        help='the dropout ratio of lora adapter.')
+                        help='Dropout rate for the LoRA adapter.')
 
     # MoE settings
     parser.add_argument('--expert_num', default=30, type=int,
-                        help='the number of total experts.')
+                        help='Total number of domain experts per module.')
     parser.add_argument('--expert_choices', default=2, type=int,
-                        help='the number of clients chosen by each expert.')
+                        help='Number of clients selected by each domain expert.')
     parser.add_argument('--max_experts', default=8, type=int,
-                        help='the maximum number of experts for each client.')
+                        help='Maximum number of domain experts assigned to each client module.')
     parser.add_argument('--load_balance_alpha', default=0.001, type=float,
-                        help='the weight of the load balance loss.')
+                        help='Weighting coefficient of the load balancing loss.')
     parser.add_argument('--top_k', default=2, type=int,
-                        help='the number of experts (exclude the shared expert) selected by each token.')
+                        help='Number of domain experts (excluding the shared expert) each token routed to.')
     parser.add_argument('--random_dispatch', default=False, type=strtobool,
-                        help='whether to randomly dispatch the experts to the clients.')
+                        help='Whether to randomly assign experts to clients. (for ablation study)')
     parser.add_argument('--save_embs', default=False, type=strtobool,
-                        help='whether to save the embeddings of the experts and the shared expert.')
+                        help='Whether to save embeddings of the client data and domain experts.')
     parser.add_argument('--save_dispatch', default=False, type=strtobool,
                         help='Whether to save the expert dispatching results.')
     parser.add_argument('--test_init', default=False, type=strtobool,
-                        help='whether to test test the initial model.')
+                        help='Whether to test the initial model.')
     parser.add_argument('--static_arch', default=False, type=strtobool,
                         help='Whether to use static model architectures throughout the FL progress.')
     parser.add_argument('--homo_arch', default=False, type=strtobool,
-                        help='Whether to use homogeneous model architectures across clients..')
+                        help='Whether to use homogeneous model architectures across clients.')
 
     # Optimizer settings
     parser.add_argument('--lr', default=5e-5, type=float,
-                        help='the learning rate of local training.')
+                        help='Learning rate for local fine-tuning.')
     parser.add_argument('--lr_decay', default=0.99, type=float,
-                        help='learning rate decay.')
-    parser.add_argument('--batch_size', default=1, type=int)
+                        help='Learning rate decay per round.')
+    parser.add_argument('--batch_size', default=1, type=int,
+                        help='Batch size for local fine-tuning.')
     parser.add_argument('--algorithms', default='fed_avg,fed_moe', type=str,
-                        help='optional in ["learned_adaptive_training", "mutual". '
-                             '"fed_avg", "fed_prompt", "fed_ptuning", "fed_moe"]')
+                        help='Algorithms to use, options: ["learned_adaptive_training", "mutual", '
+                             '"fed_avg", "fed_prompt", "fed_ptuning", "fdlora", "fed_moe"].')
 
     # Data settings
     parser.add_argument('--client_dataset_name', type=str, required=True,
-                        help='the name of the client dataset.')
+                        help="Name of the client's local dataset.")
     parser.add_argument('--client_dataset_ratio', default=1.0, type=float,
-                        help='the ratio of the client dataset to the total dataset.')
+                        help='Proportion of the global dataset used for heterogeneous partitioning.')
     parser.add_argument('--data_hes', type=str, required=True,
-                        help='the heterogeneity of the client data distributions, '
-                             'optional in ["iid", "dir<alpha>", "meta<class_per_client>"].')
+                        help='Heterogeneity settings of client data distributions, '
+                             'options: ["iid", "dir<alpha>", "meta<class_per_client>"].')
     parser.add_argument('--ratio_train_to_aux', default='0.95,0.05', type=str,
-                        help='the ratio of train set to auxiliary set.')
+                        help='Ratio of training set to embedding set.')
     parser.add_argument('--ratio_eval', default=0.1, type=float,
-                        help='the ratio of the eval set to the down-sampled dataset.')
+                        help='Proportion of the evaluation set relative to the entire client dataset.')
     parser.add_argument('--max_length', default=1024, type=int,
-                        help='the max length of sequence.')
+                        help='Maximum sequence length.')
 
     # Other settings
     parser.add_argument('--python_path', default='/home/zyc/miniconda3/bin/python', type=str,
-                        help='the path of python interpreter.')
+                        help='The path to the python interpreter.')
     parser.add_argument('--gpus', default='0,1,2', type=str,
-                        help='the indices of GPUs to use.')
+                        help='GPU indices to use.')
     parser.add_argument('--log_level', default='summarized', type=str,
-                        help='the level of logging, optional in ["summarized", "detailed"].')
+                        help='Logging level, options: ["summarized", "detailed"].')
     parser.add_argument('--seeds', default='42,62,82', type=str,
-                        help='the random seed for reproducibility.')
+                        help='Random seeds for reproducibility.')
     parser.add_argument('--partition_seed', default=None, type=int,
                         help='Random seed for heterogeneous data partition.')
-    parser.add_argument('--max_retry_times', default=2, type=int)
+    parser.add_argument('--max_retry_times', default=2, type=int,
+                        help='Maximum number of retries for failed training jobs.')
 
     args = parser.parse_args()
 

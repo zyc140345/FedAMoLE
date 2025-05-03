@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     # FL settings
     parser.add_argument('--client_num', default=10, type=int,
-                        help='Total number of clients')
+                        help='Total number of clients.')
     parser.add_argument('--rounds', default=30, type=int,
                         help='Number of communication rounds.')
     parser.add_argument('--local_epochs', default=1, type=int,
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     parser.add_argument('--static_arch', default=False, type=strtobool,
                         help='Whether to use static model architectures throughout the FL progress.')
     parser.add_argument('--homo_arch', default=False, type=strtobool,
-                        help='Whether to use homogeneous model architectures across clients..')
+                        help='Whether to use homogeneous model architectures across clients.')
 
     # Optimizer settings
     parser.add_argument('--lr', default=5e-5, type=float,
