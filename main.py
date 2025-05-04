@@ -66,6 +66,10 @@ if __name__ == '__main__':
                         help='Whether to use static model architectures throughout the FL progress.')
     parser.add_argument('--homo_arch', default=False, type=strtobool,
                         help='Whether to use homogeneous model architectures across clients.')
+    parser.add_argument('--apply_dp', default=False, type=strtobool,
+                        help='Whether to apply differential privacy.')
+    parser.add_argument('--dp_eta', default=100, type=float,
+                        help='Privacy budget for differential privacy.')
 
     # Optimizer settings
     parser.add_argument('--lr', default=5e-5, type=float,

@@ -230,7 +230,7 @@ class Client:
         self.token_proj = get_token_proj(self.model)
 
     def compute_embs(self, r):
-        accumulator = TempAccumulator(self.model, self.args.save_embs)
+        accumulator = TempAccumulator(self.model, self.args.save_embs, self.args.apply_dp, self.args.dp_eta)
         self.model.eval()
         self.model.to(self.device)
 
