@@ -127,7 +127,7 @@ if __name__ == '__main__':
     if args.random_dispatch:
         algorithm += '_random'
     if args.static_arch:
-        algorithm += '_static'
+        algorithm += '_no_rsea'
     if args.homo_arch:
         algorithm += '_homo'
     if args.log_root is None:

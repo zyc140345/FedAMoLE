@@ -29,13 +29,13 @@ ALG_MAP = {
     'fed_ptuning_tune': 'FedPTuning-FT',
     'fdlora': 'FDLoRA',
     'fed_moe': 'FedAMoLE',
-    'fed_moe_no_amole_rsea': 'FedAMoLE-A-R',
-    'fed_moe_no_amole': 'FedAMoLE-A',
+    'fed_moe_no_hmole': 'FedAMoLE-H',
     'fed_moe_no_rsea': 'FedAMoLE-R',
     'fed_moe_no_shared': 'FedAMoLE-S',
-    'fed_moe_static': 'FedMoLE',
-    'fed_moe_no_shared_static': 'FedMoLE-S',
-    'fed_moe_static_homo': 'FedMoLE-H'
+    'fed_moe_random': 'FedAMoLE (Random)',
+    'fed_moe_no_rsea_homo': 'FedAoLE-R (Homo)',
+    'fed_moe_no_hmole_random': 'FedAMoLE-H (Random)',
+    'fed_moe_no_shared_no_rsea': 'FedAMoLE-S-R'
 }
 
 DATASET_MAP = {
@@ -58,11 +58,20 @@ COLORS = ['#D96248', '#554687', '#F2A81D', '#285947', '#9B41D1', '#72DB1A', '#34
 MARKERS = ['8', 's', 'p', '<', 'D', '>', 'P', 'h', '*', 'X']
 
 
-def plot_legend(legend_elements, save_dir=None, file_name=None):
-    legend_fig = pylab.figure(figsize=(8, 1))
+def save_curve_legend(legend_elements, curve_label, color, line_style=None, marker=None):
+    legend_elements.append(plt.Line2D([0], [0], label=curve_label,
+                                      color=color, linewidth=2, linestyle=line_style,
+                                      marker=marker, markeredgewidth=2, markersize=24, markerfacecolor='none'))
+
+
+def plot_legend(legend_elements, save_dir=None, file_name=None, n_cols=None):
+    if n_cols is None:
+        n_cols = len(legend_elements)
+
+    legend_fig = pylab.figure()
     legend_ax = legend_fig.add_subplot(111)
     legend_ax.axis('off')
-    legend = legend_ax.legend(handles=legend_elements, loc='center', ncol=len(legend_elements),
+    legend = legend_ax.legend(handles=legend_elements, loc='center', ncol=n_cols,
                               frameon=True, fontsize=28)
 
     legend_fig.canvas.draw()
@@ -73,6 +82,28 @@ def plot_legend(legend_elements, save_dir=None, file_name=None):
     if save_dir is not None and file_name is not None:
         legend_path = os.path.join(save_dir, file_name)
         legend_fig.savefig(legend_path, bbox_inches='tight', pad_inches=0.1, backend='pgf')
+
+
+def plot_error_bar(ax, x_labels, metrics, curve_label, marker, color):
+    mean_metric = np.array([np.mean(metric) for metric in metrics])
+    max_metric = np.array([np.max(metric) for metric in metrics])
+    min_metric = np.array([np.min(metric) for metric in metrics])
+
+    plt.plot(x_labels, mean_metric, label=curve_label,
+             marker=marker, markersize=16, markerfacecolor='none',
+             markeredgewidth=2, linewidth=2, color=color)
+
+    xs = np.array(ax.get_xticks()).astype('float')
+    x_ls = xs - np.full_like(xs, 0.07)
+    x_rs = xs + np.full_like(xs, 0.07)
+    up_caps = [[[x_l, y_u], [x_r, y_u]] for x_l, x_r, y_u in zip(x_ls, x_rs, max_metric)]
+    down_caps = [[[x_l, y_d], [x_r, y_d]] for x_l, x_r, y_d in zip(x_ls, x_rs, min_metric)]
+    line_cols = [[[x, y_d], [x, y_u]] for x, y_d, y_u in zip(xs, min_metric, max_metric)]
+    lines = LineCollection(
+        up_caps + down_caps + line_cols,
+        linewidths=2, color=color
+    )
+    ax.add_collection(lines)
 
 
 def plot_data_distribution(
@@ -152,24 +183,23 @@ def plot_metric_per_round(root_dir, save_dir=None, n_col=2, last=False,
             for j, (algorithm, data) in enumerate(result[dataset][iid].items()):
                 marker = MARKERS[j % len(MARKERS)]
                 color = COLORS[j % len(COLORS)]
+                curve_label = ALG_MAP[algorithm]
                 if algorithm != 'fed_moe':
                     data = np.hstack([init_data, data])
 
                 if len(data.shape) == 1:
                     rounds = range(0, len(data), round_step)
                     data = data[::round_step]
-                    ax.plot(rounds, data, label=ALG_MAP[algorithm],
-                            marker=marker, markersize=12, markerfacecolor='none',
-                            markeredgewidth=2, linewidth=2, color=color)
+                    ax.plot(rounds, data, label=curve_label, marker=marker, markersize=16,
+                            markerfacecolor='none', markeredgewidth=2, linewidth=2, color=color)
                 elif error_bar:
                     mean_metric = np.mean(data, axis=0)
                     rounds = range(0, len(mean_metric), round_step)
                     mean_metric = mean_metric[::round_step]
                     max_metric = np.max(data, axis=0)[::round_step]
                     min_metric = np.min(data, axis=0)[::round_step]
-                    line = ax.plot(rounds, mean_metric, label=ALG_MAP[algorithm],
-                                   marker=marker, markersize=12, markerfacecolor='none',
-                                   markeredgewidth=2, linewidth=2, color=color)
+                    line = ax.plot(rounds, mean_metric, label=curve_label, marker=marker, markersize=16,
+                                   markerfacecolor='none', markeredgewidth=2, linewidth=2, color=color)
                     line_color = line[0].get_color()
                     ax.fill_between(rounds, min_metric, max_metric, alpha=0.2,
                                     edgecolor=line_color, linewidth=1, facecolor=line_color)
@@ -177,18 +207,15 @@ def plot_metric_per_round(root_dir, save_dir=None, n_col=2, last=False,
                     mean_metric = np.mean(data, axis=0)
                     rounds = range(0, len(mean_metric), round_step)
                     mean_metric = mean_metric[::round_step]
-                    ax.plot(rounds, mean_metric, label=ALG_MAP[algorithm],
-                            marker=marker, markersize=12, markerfacecolor='none',
-                            markeredgewidth=2, linewidth=2, color=color)
+                    ax.plot(rounds, mean_metric, label=curve_label, marker=marker, markersize=16,
+                            markerfacecolor='none', markeredgewidth=2, linewidth=2, color=color)
 
                 if dataset_id == 0:  # only add legend for the first subplot
-                    legend_elements.append(plt.Line2D([0], [0], label=ALG_MAP[algorithm], color=color,
-                                                      linewidth=2, markeredgewidth=2, marker=marker,
-                                                      markersize=24, markerfacecolor='none'))
+                    save_curve_legend(legend_elements, curve_label, color, marker=marker)
 
-            ax.set_xlabel(r'Round', fontsize=24)
-            ax.set_ylabel('ROUGE-L (%)' if metric == 'rouge' else 'Accuracy (%)', fontsize=24)
-            ax.tick_params(labelsize=24)
+            ax.set_xlabel(r'Round', fontsize=36)
+            ax.set_ylabel('ROUGE-L (%)' if metric == 'rouge' else 'Accuracy (%)', fontsize=36)
+            ax.tick_params(labelsize=36)
             if not sep_legend:
                 ax.legend(frameon=True, facecolor='white', fontsize=18, ncol=2)
             if n_col > 1:
@@ -205,8 +232,8 @@ def plot_metric_per_round(root_dir, save_dir=None, n_col=2, last=False,
             save_path = os.path.join(save_dir, f'{dataset}.pdf')
             fig.savefig(save_path, backend='pgf')
 
-        if sep_legend:
-            plot_legend(legend_elements, save_dir, f'metric_per_round_legend.pdf')
+        if dataset_id == 0 and sep_legend:
+            plot_legend(legend_elements, save_dir, f'metric_per_round_legend.pdf', n_cols=2)
 
 
 def plot_metric_per_iid(root_dir, save_dir=None, last=False, sep_legend=False):
@@ -228,46 +255,28 @@ def plot_metric_per_iid(root_dir, save_dir=None, last=False, sep_legend=False):
 
         algorithms = list(result[dataset][iids[0]].keys())
         for i, algorithm in enumerate(algorithms):
-            metrics_per_iid = [calc_metric(result[dataset][iid][algorithm]) for iid in iids]
-            mean_metric = np.array([np.mean(acc) for acc in metrics_per_iid])
+            metrics_per_iid = [calc_metric(result[dataset][iid][algorithm]) for iid in iids]  # (num_seeds, num_iids)
 
             color = COLORS[i % len(COLORS)]
             marker = MARKERS[i % len(MARKERS)]
+            curve_label = ALG_MAP[algorithm]
 
             if len(metrics_per_iid[0]) == 1:
                 iid_labels = [f'$\\alpha={iid[3:]}$' for iid in iids]
-                plt.plot(iid_labels, mean_metric, label=ALG_MAP[algorithm], marker=marker, markeredgewidth=2,
+                mean_metric = np.array([np.mean(acc) for acc in metrics_per_iid])
+                plt.plot(iid_labels, mean_metric, label=curve_label, marker=marker, markeredgewidth=2,
                          markersize=16, markerfacecolor='none', linewidth=2, color=color)
             else:
-                max_metric = np.array([np.max(metric) for metric in metrics_per_iid])
-                min_metric = np.array([np.min(metric) for metric in metrics_per_iid])
-
                 iid_labels = [f'{float(iid[3:]):.1f}' for iid in iids]
-                plt.plot(iid_labels, mean_metric, label=ALG_MAP[algorithm],
-                         marker=marker, markersize=16, markerfacecolor='none',
-                         markeredgewidth=2, linewidth=2, color=color)
-
-                xs = np.array(ax.get_xticks()).astype('float')
-                x_ls = xs - np.full_like(xs, 0.07)
-                x_rs = xs + np.full_like(xs, 0.07)
-                up_caps = [[[x_l, y_u], [x_r, y_u]] for x_l, x_r, y_u in zip(x_ls, x_rs, max_metric)]
-                down_caps = [[[x_l, y_d], [x_r, y_d]] for x_l, x_r, y_d in zip(x_ls, x_rs, min_metric)]
-                line_cols = [[[x, y_d], [x, y_u]] for x, y_d, y_u in zip(xs, min_metric, max_metric)]
-                lines = LineCollection(
-                    up_caps + down_caps + line_cols,
-                    linewidths=2, color=color
-                )
-                ax.add_collection(lines)
+                plot_error_bar(ax, iid_labels, metrics_per_iid, curve_label, marker, color)
 
             if dataset_id == 0:  # only add legend for the first subplot
-                legend_elements.append(plt.Line2D([0], [0], label=ALG_MAP[algorithm], color=color,
-                                                  linewidth=2, markeredgewidth=2, marker=marker,
-                                                  markersize=24, markerfacecolor='none'))
+                save_curve_legend(legend_elements, curve_label, color, marker=marker)
 
         ax.autoscale()
-        ax.set_xlabel(r'$\alpha$', fontsize=24)
-        ax.set_ylabel('Accuracy (%)' if metric == 'acc' else 'ROUGE-L (%)', fontsize=24)
-        ax.tick_params(labelsize=24)
+        ax.set_xlabel(r'$\alpha$', fontsize=30)
+        ax.set_ylabel('Accuracy (%)' if metric == 'acc' else 'ROUGE-L (%)', fontsize=30)
+        ax.tick_params(labelsize=30)
         if not sep_legend:
             ax.legend(frameon=True, facecolor='white', fontsize=20)
 
@@ -330,34 +339,30 @@ def plot_metric_per_client_num(root_dir, save_dir=None, last=False, include_ft=F
 
             marker = MARKERS[i % len(MARKERS)]
             color = COLORS[i % len(COLORS)]
-            plt.plot(client_nums, metrics, label=ALG_MAP[algorithm],
-                     marker=marker, markersize=16, markerfacecolor='none',
-                     markeredgewidth=2, linewidth=2, color=color)
+            curve_label = ALG_MAP[algorithm]
+            plt.plot(client_nums, metrics, label=curve_label, marker=marker, markersize=16,
+                     markerfacecolor='none', markeredgewidth=2, linewidth=2, color=color)
 
             if dataset_id == 0:  # only add legend for the first subplot
-                legend_elements.append(plt.Line2D([0], [0], label=ALG_MAP[algorithm], color=color,
-                                                  linewidth=2, markeredgewidth=2, marker=marker,
-                                                  markersize=24, markerfacecolor='none'))
+                save_curve_legend(legend_elements, curve_label, color, marker=marker)
 
             if metrics_tune:
                 i += 1
                 marker = MARKERS[i % len(MARKERS)]
                 color = COLORS[i % len(COLORS)]
-                plt.plot(client_nums, metrics_tune, label=ALG_MAP[algorithm + '_tune'],
-                         marker=marker, markersize=16, markerfacecolor='none',
-                         markeredgewidth=2, linewidth=2, color=color)
+                curve_label = ALG_MAP[algorithm + '_tune']
+                plt.plot(client_nums, metrics_tune, label=curve_label, marker=marker, markersize=16,
+                         markerfacecolor='none', markeredgewidth=2, linewidth=2, color=color)
 
                 if dataset_id == 0:  # only add legend for the first subplot
-                    legend_elements.append(plt.Line2D([0], [0], label=ALG_MAP[algorithm + '_tune'], color=color,
-                                                      linewidth=2, markeredgewidth=2, marker=marker,
-                                                      markersize=24, markerfacecolor='none'))
+                    save_curve_legend(legend_elements, curve_label, color, marker=marker)
 
             i += 1
 
         ax.autoscale()
-        ax.set_xlabel('Client Number', fontsize=24)
-        ax.set_ylabel('Accuracy (%)' if metric_name == 'acc' else 'ROUGE-L (%)', fontsize=24)
-        ax.tick_params(labelsize=24)
+        ax.set_xlabel('Client Number', fontsize=30)
+        ax.set_ylabel('Accuracy (%)' if metric_name == 'acc' else 'ROUGE-L (%)', fontsize=30)
+        ax.tick_params(labelsize=30)
         if not sep_legend:
             ax.legend(frameon=True, facecolor='white', fontsize=18)
 
@@ -406,10 +411,10 @@ def plot_expert_choices_vs_lr(root_dir: str, save_dir=None, expert_num=15, max_e
                  marker=marker, markersize=16, markerfacecolor='none',
                  markeredgewidth=2, linewidth=2, color=color)
 
-    plt.xlabel(r'$\eta$', fontsize=24)
-    plt.ylabel('Accuracy (%)' if task_type == 'cls_lm' else 'ROUGE-L (%)', fontsize=24)
-    plt.xticks(fontsize=24)
-    plt.yticks(fontsize=24)
+    plt.xlabel(r'$\eta$', fontsize=30)
+    plt.ylabel('Accuracy (%)' if task_type == 'cls_lm' else 'ROUGE-L (%)', fontsize=30)
+    plt.xticks(fontsize=30)
+    plt.yticks(fontsize=30)
     plt.legend(fontsize=24)
     plt.tight_layout()
 
@@ -456,15 +461,15 @@ def plot_expert_num_vs_max_experts(root_dir: str, save_dir=None, expert_choices=
     ax.view_init(elev=45, azim=-60)
     surf = ax.plot_surface(X, Y, Z, cmap='viridis', edgecolor='k', linewidth=0.5)
 
-    ax.set_xlabel('Total Experts', fontsize=24, labelpad=15)
-    ax.set_ylabel('Max Experts', fontsize=24, labelpad=15)
-    ax.set_zlabel('Accuracy (%)' if task_type == 'cls_lm' else 'ROUGE (%)', fontsize=24, labelpad=20)
+    ax.set_xlabel('Total Experts', fontsize=30, labelpad=20)
+    ax.set_ylabel('Max Experts', fontsize=30, labelpad=20)
+    ax.set_zlabel('Accuracy (%)' if task_type == 'cls_lm' else 'ROUGE (%)', fontsize=30, labelpad=20)
     ax.set_xticks(expert_nums)
     ax.set_yticks(max_experts)
-    ax.tick_params(labelsize=24)
+    ax.tick_params(labelsize=30)
     ax.tick_params(axis='z', pad=10)
-    cbar = fig.colorbar(surf, ax=ax, pad=0.2)
-    cbar.ax.tick_params(labelsize=24)
+    cbar = fig.colorbar(surf, ax=ax, pad=0.21)
+    cbar.ax.tick_params(labelsize=30)
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.15)
 
@@ -591,16 +596,16 @@ def plot_logits_scatter(root_dir: str, seed: int, save_dir=None, layer_step=1, s
 
 def plot_ablation_bar(root_dir, save_dir=None, last=False):
     result = evaluation.summary(root_dir, last=last, return_all=True, include_ft=True)
-    algorithms = ['fed_avg_tune', 'fed_moe_static', 'fed_moe']
-    algo_labels = ['FedIT-FT', 'FedMoLE', 'FedAMoLE (ours)']
+    algorithms = ['fed_avg_tune', 'fed_moe_no_rsea', 'fed_moe']
+    algo_labels = ['FedIT-FT', 'FedAMoLE-R', 'FedAMoLE (ours)']
     datasets = ['snli', 'natural-instruct']
-    y_lims = [(85, 89), (50, 61.5)]
+    y_lims = [(85, 89), (51, 61.5)]
 
     def calc_metric(x):
         return np.mean(x[:, -1]) if last else np.mean(x.max(axis=1))
 
     for i, dataset in enumerate(datasets):
-        fig, ax = plt.subplots(figsize=(10, 5))
+        fig, ax = plt.subplots(figsize=(12, 5))
 
         task_type = DATASET2TASK_TYPE[dataset]
         metric = 'rouge' if task_type == 'causal_lm' else 'acc'
@@ -610,8 +615,8 @@ def plot_ablation_bar(root_dir, save_dir=None, last=False):
         ax.bar(algo_labels, metrics, color=colors, edgecolor='black', linewidth=0.5, width=0.4)
 
         ax.set_ylim(*y_lims[i])
-        ax.set_ylabel('Accuracy (%)' if metric == 'acc' else 'ROUGE-L (%)', fontsize=32)
-        ax.tick_params(labelsize=32)
+        ax.set_ylabel('Accuracy (%)' if metric == 'acc' else 'ROUGE-L (%)', fontsize=36)
+        ax.tick_params(labelsize=36)
 
         fig.tight_layout()
         fig.show()
@@ -619,6 +624,91 @@ def plot_ablation_bar(root_dir, save_dir=None, last=False):
         if save_dir is not None:
             save_path = os.path.join(save_dir, f'ablation_bar_{dataset}.pdf')
             fig.savefig(save_path, backend='pgf')
+
+
+def plot_differential_privacy(root_dir, save_dir=None, last=False, sep_legend=False):
+    def calc_metric(seeds_dir, task_type):
+        seeds = list_dir(seeds_dir)
+        metrics = []
+        algorithm = None
+
+        for seed in seeds:
+            timestamp = list_dir(os.path.join(seeds_dir, seed))[0]
+            log_dir = os.path.join(seeds_dir, seed, timestamp)
+            algo_dir = seeds_dir.split('/')[-1]
+            if algo_dir in ['1', '50', '100'] or algo_dir == 'fed_moe':
+                result, params = parse_tensorboard_log(log_dir)
+                algorithm = 'fed_moe'
+            else:
+                result, params = parse_json_log(log_dir)
+                algorithm = algo_dir
+
+            if task_type == 'cls_lm':
+                metric = mta(result, algorithm)
+            else:
+                metric = mtr(result, algorithm)
+
+            if metric.shape[0] == 2 * params['rounds']:  # do_ft
+                metric = metric[range(0, metric.shape[0], 2)]
+                metric = metric[np.newaxis, :]
+                algorithm += "_tune"
+            elif len(metric.shape) == 1:  # single seed
+                metric = metric[np.newaxis, :]
+            metrics.append(metric)
+
+        metrics = np.concatenate(metrics)
+        metrics = metrics[:, -1] if last else metrics.max(axis=1)
+        return metrics, algorithm
+
+    datasets = list_dir(root_dir)
+    etas = ['1', '50', '100']
+    legend_elements = []
+    for dataset_id, dataset in enumerate(datasets):
+        task_type = DATASET2TASK_TYPE[dataset]
+        metric_name = 'rouge' if task_type == 'causal_lm' else 'acc'
+
+        fig, ax = plt.subplots()
+        dp_metrics = {}
+        baseline_metrics = {}
+        for algo_dir in list_dir(os.path.join(root_dir, dataset)):
+            seeds_dir = os.path.join(root_dir, dataset, algo_dir)
+            metrics, algorithm = calc_metric(seeds_dir, task_type)
+            if algo_dir in ['1', '50', '100']:
+                eta = algo_dir
+                dp_metrics[eta] = metrics
+                if dataset_id == 0 and len(dp_metrics) == 1:  # only add legend for the first subplot
+                    save_curve_legend(legend_elements, 'FedAMoLE (DP)', COLORS[0], marker=MARKERS[0])
+            else:
+                baseline_metrics[algorithm] = metrics
+                color = COLORS[1] if algorithm == 'fed_moe' else COLORS[9]
+                if dataset_id == 0:  # only add legend for the first subplot
+                    save_curve_legend(legend_elements, ALG_MAP[algorithm], color, line_style='--')
+
+        dp_metrics = [dp_metrics[eta] for eta in etas]
+        plot_error_bar(ax, etas, dp_metrics, 'FedAMoLE (DP)', MARKERS[0], COLORS[0])
+
+        for algorithm, baseline_metric in baseline_metrics.items():
+            baseline_metric = [np.mean(baseline_metric)] * len(etas)
+            color = COLORS[1] if algorithm == 'fed_moe' else COLORS[9]
+            plt.plot(etas, baseline_metric, label=ALG_MAP[algorithm],
+                     linewidth=2, color=color, linestyle='--')
+
+        ax.autoscale()
+        ax.set_xlabel('$\eta$', fontsize=30)
+        ax.set_ylabel('Accuracy (%)' if metric_name == 'acc' else 'ROUGE-L (%)', fontsize=30)
+        ax.tick_params(labelsize=30)
+        if not sep_legend:
+            ax.legend(frameon=True, facecolor='white', fontsize=18)
+
+        fig.tight_layout()
+        fig.show()
+
+        if save_dir is not None:
+            save_path = os.path.join(save_dir, f'{dataset}_dp.pdf')
+            fig.savefig(save_path, backend='pgf')
+
+    if sep_legend:
+        plot_legend(legend_elements, save_dir, f'dp_legend.pdf')
 
 
 if __name__ == '__main__':
@@ -636,14 +726,14 @@ if __name__ == '__main__':
     # Uncomment one of the following parts to generate the corresponding figure in the paper
 
     # Figure 2
-    root_dir = './logs'
-    save_dir = './figures'
-    plot_ablation_bar(root_dir, save_dir, last=True)
-
-    # Figure 6
     # root_dir = './logs'
     # save_dir = './figures'
-    # plot_metric_per_round(root_dir, save_dir, n_col=1, last=True, round_step=2, sep_legend=True)
+    # plot_ablation_bar(root_dir, save_dir, last=True)
+
+    # Figure 6
+    root_dir = './logs'
+    save_dir = './figures'
+    plot_metric_per_round(root_dir, save_dir, n_col=1, last=True, round_step=2, sep_legend=True)
 
     # Figure 7
     # root_dir = './logs'
@@ -669,3 +759,7 @@ if __name__ == '__main__':
     # save_dir = './figures'
     # plot_expert_choices_vs_lr(root_dir, save_dir, last=True)
     # plot_expert_num_vs_max_experts(root_dir, save_dir, last=True)
+
+    # root_dir = './logs'
+    # save_dir = './figures'
+    # plot_differential_privacy(root_dir, save_dir, last=True, sep_legend=True)

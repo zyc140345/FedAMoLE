@@ -36,13 +36,13 @@ ALGO2METRIC_SUFFIX = {
     'fed_ptuning': '',
     'fdlora': '',
     'fed_moe': '',
-    'fed_moe_no_amole_rsea': '',
+    'fed_moe_no_hmole': '',
     'fed_moe_no_rsea': '',
-    'fed_moe_no_amole': '',
     'fed_moe_no_shared': '',
-    'fed_moe_static': '',
-    'fed_moe_no_shared_static': '',
-    'fed_moe_static_homo': ''
+    'fed_moe_random': '',
+    'fed_moe_no_rsea_homo': '',
+    'fed_moe_no_hmole_random': '',
+    'fed_moe_no_shared_no_rsea': ''
 }
 
 
