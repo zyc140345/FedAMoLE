@@ -763,7 +763,7 @@ if __name__ == '__main__':
     # save_dir = './figures'
     # plot_metric_per_iid(root_dir, save_dir, last=True, sep_legend=True)
 
-    # Figure 10
+    # Figure 11
     # root_dir = './logs'
     # save_dir = './figures'
     # plot_differential_privacy(root_dir, save_dir, last=True, sep_legend=True)
