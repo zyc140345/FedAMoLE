@@ -597,7 +597,11 @@ def plot_logits_scatter(root_dir: str, seed: int, save_dir=None, layer_step=1, s
 def plot_ablation_bar(root_dir, save_dir=None, last=False):
     result = evaluation.summary(root_dir, last=last, return_all=True, include_ft=True)
     algorithms = ['fed_avg_tune', 'fed_moe_no_rsea', 'fed_moe']
-    algo_labels = ['FedIT-FT', 'FedAMoLE-R', 'FedAMoLE (ours)']
+    algo_labels = [
+        'FedIT-FT\n× Hetero Arch\n× Data Aware',
+        'FedAMoLE-R\n√ Hetero Arch\n× Data Aware',
+        'FedAMoLE\n√ Hetero Arch\n√ Data Aware'
+    ]
     datasets = ['snli', 'natural-instruct']
     y_lims = [(85, 89), (51, 61.5)]
 
@@ -605,8 +609,7 @@ def plot_ablation_bar(root_dir, save_dir=None, last=False):
         return np.mean(x[:, -1]) if last else np.mean(x.max(axis=1))
 
     for i, dataset in enumerate(datasets):
-        fig, ax = plt.subplots(figsize=(12, 5))
-
+        fig, ax = plt.subplots(figsize=(9, 4))
         task_type = DATASET2TASK_TYPE[dataset]
         metric = 'rouge' if task_type == 'causal_lm' else 'acc'
 
@@ -615,8 +618,8 @@ def plot_ablation_bar(root_dir, save_dir=None, last=False):
         ax.bar(algo_labels, metrics, color=colors, edgecolor='black', linewidth=0.5, width=0.4)
 
         ax.set_ylim(*y_lims[i])
-        ax.set_ylabel('Accuracy (%)' if metric == 'acc' else 'ROUGE-L (%)', fontsize=36)
-        ax.tick_params(labelsize=36)
+        ax.set_ylabel('Accuracy (%)' if metric == 'acc' else 'ROUGE-L (%)', fontsize=30)
+        ax.tick_params(labelsize=30)
 
         fig.tight_layout()
         fig.show()
@@ -726,14 +729,14 @@ if __name__ == '__main__':
     # Uncomment one of the following parts to generate the corresponding figure in the paper
 
     # Figure 2
-    # root_dir = './logs'
-    # save_dir = './figures'
-    # plot_ablation_bar(root_dir, save_dir, last=True)
-
-    # Figure 6
     root_dir = './logs'
     save_dir = './figures'
-    plot_metric_per_round(root_dir, save_dir, n_col=1, last=True, round_step=2, sep_legend=True)
+    plot_ablation_bar(root_dir, save_dir, last=True)
+
+    # Figure 6
+    # root_dir = './logs'
+    # save_dir = './figures'
+    # plot_metric_per_round(root_dir, save_dir, n_col=1, last=True, round_step=2, sep_legend=True)
 
     # Figure 7
     # root_dir = './logs'
@@ -752,14 +755,15 @@ if __name__ == '__main__':
     # Figure 9
     # root_dir = './logs'
     # save_dir = './figures'
-    # plot_metric_per_iid(root_dir, save_dir, last=True, sep_legend=True)
+    # plot_expert_choices_vs_lr(root_dir, save_dir, last=True)
+    # plot_expert_num_vs_max_experts(root_dir, save_dir, last=True)
 
     # Figure 10
     # root_dir = './logs'
     # save_dir = './figures'
-    # plot_expert_choices_vs_lr(root_dir, save_dir, last=True)
-    # plot_expert_num_vs_max_experts(root_dir, save_dir, last=True)
+    # plot_metric_per_iid(root_dir, save_dir, last=True, sep_legend=True)
 
+    # Figure 10
     # root_dir = './logs'
     # save_dir = './figures'
     # plot_differential_privacy(root_dir, save_dir, last=True, sep_legend=True)
